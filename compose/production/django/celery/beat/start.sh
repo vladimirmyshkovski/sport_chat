@@ -5,4 +5,4 @@ set -o pipefail
 set -o nounset
 
 
-celery -A sport_chat.taskapp beat -l INFO
+# celery -A sport_chat.taskapp beat -l INFO
