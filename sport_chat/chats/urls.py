@@ -48,6 +48,11 @@ urlpatterns = [
         name='team_detail',
     ),
     url(
+        regex="^team_chat/(?P<pk>\d+)/$",
+        view=views.TeamChatDetailView.as_view(),
+        name='team_chat_detail',
+    ),
+    url(
         regex="^team/(?P<pk>\d+)/~update/$",
         view=views.TeamUpdateView.as_view(),
         name='team_update',

@@ -109,10 +109,14 @@ class Notification(Base):
 
 @python_2_unicode_compatible
 class Message(Base):
-
+	room = models.CharField(max_length=50)
 	event = models.ForeignKey(
 		Event
 	)
+	team = models.ForeignKey(
+		Team,
+		null=True,
+	) 
 	user = models.ForeignKey(settings.AUTH_USER_MODEL)
 	timestamp = models.DateTimeField(db_index=True, default=timezone.now)
 	content = models.TextField()

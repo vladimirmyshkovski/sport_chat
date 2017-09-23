@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="row">
+<div class="col-md-12">
+<h4>Hello <span class="username">{{ user.username }}</span>! You are joined to <span class="team">{{ object.name }}</span></h4>
+</div>
+</div>
+<div class="row">
+<div class="chat">
+{% for chat_message in chat_messages %}
+	<div class="{% if message.room == object.pk %} col-lg-8 {% else %} col-lg-4 col-lg-offset-4 {% endif %} message"> 
+		<span style="color: blue">{{ chat_message.team.name }}</span> 
+		<span style="color: red">{{ chat_message.user.username }}</span>
+		{{ chat_message.content }}
+		<span class="timestamp">{{ chat_message.timestamp }}</span>
+	</div>
+{% endfor %}
+</div>
+</div>
+<div class="row">
+<div class="col-md-12">
+<input type="text" class="text">
+<button class="btn send">Send</button>
+</div>
+</div>
+{% endblock content %}
+
+{% block include_javascript %}
+<script type="text/javascript">
+	var room = {{ object.pk }};
+	var username = $('.username').text();
+	var team = $('.team').text();
+</script>
+<script src="{% static 'js/ws.js' %}"></script>
+<script type="text/javascript">
+	$(document).ready(function(){
+		var n = $(document).height();
+		$('html, body').animate({ scrollTop: n }, 50);
+		sendMessage = function(){
+			var n = $(document).height();
+			var text = $('.text').val();
+			if ($.trim(text) !== '') {
+				socket.send(text);
+			};
+			$('.text').val('');
+			$('html, body').animate({ scrollTop: n }, 50);
+		};
+
+		$(document).keypress(function(e) {
+		    if(e.which == 13) {
+		        sendMessage();
+		    }
+		});
+
+		$('.send').click(function(){
+			sendMessage();
+		});
+	});
+</script>
+{% endblock include_javascript %}

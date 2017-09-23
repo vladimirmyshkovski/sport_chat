@@ -15,6 +15,7 @@ urlpatterns = [
     # User management
     url(r'^users/', include('sport_chat.users.urls', namespace='users')),
     url(r'^accounts/', include('allauth.urls')),
+    url(r'^chats/', include('sport_chat.chats.urls', namespace='chats')),
 
     # Your stuff: custom urls includes go here
 
