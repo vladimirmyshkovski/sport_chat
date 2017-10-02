@@ -236,10 +236,9 @@ ADMIN_URL = env('DJANGO_ADMIN_URL')
 # ------------------------------------------------------------------------------
 CHANNEL_LAYERS = {
     "default": {
-        #"BACKEND": "asgiref.inmemory.ChannelLayer",
         "BACKEND": "asgi_redis.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [('redis://127.0.0.1', 6379)]#REDIS_LOCATION, #[("localhost", 6379)],
+            "hosts": [('redis://127.0.0.1', 6379)]
         },
         "ROUTING": "config.routing.channel_routing",
     },
