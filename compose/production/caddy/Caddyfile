@@ -1,5 +1,5 @@
 www.{$DOMAIN_NAME} {
-    redir https://sportchating.com
+    redir https://stagingserver.xyz
 }
 
 {$DOMAIN_NAME} {
