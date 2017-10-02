@@ -46,7 +46,7 @@ def change_event_status(sender, instance, created, **kwargs):
 			countdown = instance.start_date - instance.created
 		elif instance.status == 'online':
 			countdown = instance.end_date - instance.start_date 
-		change_status.apply_async((instance.pk), countdown=countdown.seconds)
+		change_status.apply_async(args=(instance.pk, ), countdown=countdown.seconds)
 
 
 @receiver(post_save, sender=Notification)
