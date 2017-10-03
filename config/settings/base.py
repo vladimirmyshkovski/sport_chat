@@ -53,7 +53,7 @@ THIRD_PARTY_APPS = [
     'avatar',
     'easy_thumbnails',
     'image_cropping',
-    'django_celery_beat', # tasks scheduler
+    #'django_celery_beat', # tasks scheduler
 ]
 
 # Apps specific for this project go here.
