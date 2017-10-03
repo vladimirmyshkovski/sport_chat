@@ -35,7 +35,21 @@ def chat_message_consumer(message):
 			"username": username,
 			"team": team.name,
 			"room": room,
-			}),
+		}),
+	})
+	
+	if event.team_left == team:
+		room2 = event.team_right.pk
+	else:
+		room2 = event.team_left.pk
+
+	Group('chat-%s' % room2).send({
+		"text": json.dumps({
+			"message": message.content['message'],
+			"username": username,
+			"team": team.name,
+			"room": room,
+		}),
 	})
 
 #@channel_session

@@ -16,25 +16,26 @@ from .models import (
 )
 
 from django.db.models import Q
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
-class TeamCreateView(CreateView):
+class TeamCreateView(LoginRequiredMixin, CreateView):
 
     model = Team
     fields = '__all__'
 
 
-class TeamDeleteView(DeleteView):
+class TeamDeleteView(LoginRequiredMixin, DeleteView):
 
     model = Team
 
 
-class TeamDetailView(DetailView):
+class TeamDetailView(LoginRequiredMixin, DetailView):
 
     model = Team
 
 
-class TeamChatDetailView(DetailView):
+class TeamChatDetailView(LoginRequiredMixin, DetailView):
 
     model = Team
     template_name = 'chats/team_chat.html'
@@ -45,16 +46,17 @@ class TeamChatDetailView(DetailView):
             Q(status='end'),
             Q(team_left=self.object) | Q(team_left=self.object)
         )
+        print(event)
         context['chat_messages'] = Message.objects.filter(event=event)
         return context
 
 
-class TeamUpdateView(UpdateView):
+class TeamUpdateView(LoginRequiredMixin, UpdateView):
 
     model = Team
 
 
-class TeamListView(ListView):
+class TeamListView(LoginRequiredMixin, ListView):
 
     model = Team
 
@@ -62,54 +64,54 @@ class TeamListView(ListView):
         queryset = super(TeamListView).get_queryset()
         return queryset.exclude(status='end')
 
-class EventCreateView(CreateView):
+class EventCreateView(LoginRequiredMixin, CreateView):
 
     model = Event
     fields = '__all__'
 
 
-class EventDeleteView(DeleteView):
+class EventDeleteView(LoginRequiredMixin, DeleteView):
 
     model = Event
 
 
-class EventDetailView(DetailView):
+class EventDetailView(LoginRequiredMixin, DetailView):
 
     model = Event
 
 
-class EventUpdateView(UpdateView):
+class EventUpdateView(LoginRequiredMixin, UpdateView):
 
     model = Event
 
 
-class EventListView(ListView):
+class EventListView(LoginRequiredMixin, ListView):
 
     model = Event
 
 
-class NotificationCreateView(CreateView):
+class NotificationCreateView(LoginRequiredMixin, CreateView):
 
     model = Notification
     fields = '__all__'
 
 
-class NotificationDeleteView(DeleteView):
+class NotificationDeleteView(LoginRequiredMixin, DeleteView):
 
     model = Notification
 
 
-class NotificationDetailView(DetailView):
+class NotificationDetailView(LoginRequiredMixin, DetailView):
 
     model = Notification
 
 
-class NotificationUpdateView(UpdateView):
+class NotificationUpdateView(LoginRequiredMixin, UpdateView):
 
     model = Notification
 
 
-class NotificationListView(ListView):
+class NotificationListView(LoginRequiredMixin, ListView):
 
     model = Notification
 
