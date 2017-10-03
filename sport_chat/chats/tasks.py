@@ -1,7 +1,7 @@
 import ujson as json
 from .models import Event, Notification
 from celery import shared_task
-from django_celery_beat.models import PeriodicTask, IntervalSchedule
+#from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.dispatch import receiver
 from django.db.models.signals import pre_save, post_save
 from annoying.functions import get_object_or_None

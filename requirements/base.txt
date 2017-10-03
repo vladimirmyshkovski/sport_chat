@@ -66,4 +66,4 @@ ujson
 django-annoying
 django-image-cropping
 easy_thumbnails
-django-celery-beat
+#django-celery-beat
