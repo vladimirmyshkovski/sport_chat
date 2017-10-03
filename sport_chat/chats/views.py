@@ -44,7 +44,7 @@ class TeamChatDetailView(LoginRequiredMixin, DetailView):
         context = super(TeamChatDetailView, self).get_context_data(*args, **kwargs)
         event = Event.objects.exclude(
             Q(status='end'),
-            Q(team_left=self.object) | Q(team_left=self.object)
+            Q(team_left=self.object) | Q(team_right=self.object)
         )
         print(event)
         context['chat_messages'] = Message.objects.filter(event=event)
