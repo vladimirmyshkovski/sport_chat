@@ -9,12 +9,16 @@ urlpatterns = [
     url(r'^$', TemplateView.as_view(template_name='pages/home.html'), name='home'),
     url(r'^about/$', TemplateView.as_view(template_name='pages/about.html'), name='about'),
 
+    url(r'^chat/$', TemplateView.as_view(template_name='chats/chat.html'), name='chat'),
+
     # Django Admin, use {% url 'admin:index' %}
     url(settings.ADMIN_URL, admin.site.urls),
 
     # User management
-    url(r'^users/', include('sport_chat.users.urls', namespace='users')),
     url(r'^accounts/', include('allauth.urls')),
+    url(r'^avatar/', include('avatar.urls')),
+    
+    url(r'^users/', include('sport_chat.users.urls', namespace='users')),
     url(r'^chats/', include('sport_chat.chats.urls', namespace='chats')),
 
     # Your stuff: custom urls includes go here

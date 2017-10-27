@@ -30,6 +30,7 @@
 
 {% block include_javascript %}
 <script type="text/javascript">
+	var notificationRoom = {{ event }}
 	var room = {{ object.pk }};
 	var username = $('.username').text();
 	var team = $('.team').text();
@@ -43,7 +44,7 @@
 			var n = $(document).height();
 			var text = $('.text').val();
 			if ($.trim(text) !== '') {
-				socket.send(text);
+				chat_socket.send(text);
 			};
 			$('.text').val('');
 			$('html, body').animate({ scrollTop: n }, 50);

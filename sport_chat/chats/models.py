@@ -8,6 +8,10 @@ from django.utils.translation import ugettext_lazy as _
 from model_utils.fields import StatusField, MonitorField
 from django.utils.encoding import python_2_unicode_compatible
 from model_utils.models import TimeStampedModel, SoftDeletableModel
+from channels import Group
+
+from .settings import MSG_TYPE_MESSAGE
+import ujson as json
 
 
 def team_flag_directory_path(instance, filename):
@@ -34,6 +38,7 @@ class Team(Base):
 	flag = models.ImageField(upload_to=team_flag_directory_path)
 	cropping = ImageRatioField('flag', '430x360')
 
+
 	def __str__(self):
 		return self.name
 
@@ -56,15 +61,19 @@ class Event(Base):
 		max_length=55,
 		verbose_name = _('Name of event'),
 		)
-	team_left = models.ForeignKey(
+	home_team = models.ForeignKey(
 		Team,
-		related_name = 'event_team_left',
+		related_name = 'event_home_team',
 		verbose_name = _('Left team'),
+		null=True,
+		blank=False
 		)
-	team_right = models.ForeignKey(
+	away_team = models.ForeignKey(
 		Team,
-		related_name = 'event_team_right',
+		related_name = 'event_away_team',
 		verbose_name = _('Right team'),
+		null=True,
+		blank=False
 		)
 	start_date = models.DateTimeField(
 		verbose_name = _('Start date and time'),
@@ -86,6 +95,28 @@ class Event(Base):
 
 	def __str__(self):
 		return self.name
+
+	@property
+	def websocket_group(self):
+	    """
+	    Returns the Channels Group that sockets should subscribe to to get sent
+	    messages as they are generated.
+	    """
+	    return Group("room-%s" % self.id)
+
+	def send_message(self, message, user, team=None, teamname=None, msg_type=MSG_TYPE_MESSAGE):
+	    """
+	    Called to send a message to the room on behalf of a user.
+	    """
+	    final_msg = {
+	    	'room': str(self.id), 'message': message, 'username': user.username, 'team': team, 
+	    	'teamname': teamname, 'msg_type': msg_type, "timestamp": timezone.now().strftime('%p:%I:%M:%S')
+	    }
+
+	    # Send out the message to everyone in the room
+	    self.websocket_group.send(
+	        {"text": json.dumps(final_msg)}
+	    )
 
 
 @python_2_unicode_compatible

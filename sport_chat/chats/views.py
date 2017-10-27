@@ -46,7 +46,9 @@ class TeamChatDetailView(LoginRequiredMixin, DetailView):
             Q(status='end'),
             Q(team_left=self.object) | Q(team_right=self.object)
         )
-        print(event)
+        #print(event)
+        if event:
+            context['event'] = event[0].pk
         context['chat_messages'] = Message.objects.filter(event=event)
         return context
 
@@ -60,9 +62,6 @@ class TeamListView(LoginRequiredMixin, ListView):
 
     model = Team
 
-    def get_queryset(self):
-        queryset = super(TeamListView).get_queryset()
-        return queryset.exclude(status='end')
 
 class EventCreateView(LoginRequiredMixin, CreateView):
 
@@ -88,6 +87,10 @@ class EventUpdateView(LoginRequiredMixin, UpdateView):
 class EventListView(LoginRequiredMixin, ListView):
 
     model = Event
+
+    def get_queryset(self):
+        queryset = super(EventListView).get_queryset()
+        return queryset.exclude(status='end')
 
 
 class NotificationCreateView(LoginRequiredMixin, CreateView):

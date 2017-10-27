@@ -1,0 +1,276 @@
+{% load static avatar_tags events %}<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>{% block title %}sport_chat{% endblock title %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/compiled.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <title></title>
+</head>
+<body>
+
+<div class="container mt-5" style="width: 30rem">
+
+
+<!-- Nav tabs -->
+<div class="tabs-wrapper"> 
+    <ul class="nav classic-tabs tabs-cyan" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link waves-light" data-toggle="tab" href="#chat-tab" role="tab"><i class="fa fa-comment fa-2x" aria-hidden="true"></i><br> Chat</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link waves-light" data-toggle="tab" href="#chats-tab" role="tab"><i class="fa fa-comments fa-2x" aria-hidden="true"></i><br> Chats</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link waves-light active" data-toggle="tab" href="#events-tab" role="tab"><i class="fa fa-list fa-2x" aria-hidden="true"></i><br> Events</a>
+        </li>
+        <!--li class="nav-item">
+            <a class="nav-link waves-light" data-toggle="tab" href="#profile-panel" role="tab"><i class="fa fa-user fa-2x" aria-hidden="true"></i><br> Profile</a>
+        </li-->
+    </ul>
+</div>
+
+<!-- Tab panels -->
+<div class="tab-content card">
+
+    <!--Panel 1-->
+    <div class="tab-pane fade" id="chat-tab" role="tabpanel">
+        <div id="chat-container">
+            
+        </div>
+        <!--div class="message d-flex flex-column mb-3">
+            <div class="d-flex flex-row">
+                <div class="p-2">
+                    <img class="rounded-circle img-responsive" src="https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman1-512.png" width="60" height="60">
+                </div>
+                <div class="d-flex flex-column p-2">
+                    <p>Team: right</p>
+                    <p>Name: Mike</p>
+                </div>
+            </div>
+            <p>Message: Hello!</p>
+        </div-->
+        <!--div class="message d-flex flex-column mb-3">
+            <div class="d-flex flex-row-reverse">
+                <div class="p-2">
+                    <img class="rounded-circle img-responsive" src="https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman2-512.png" width="60" height="60">
+                </div>
+                <div class="d-flex flex-column p-2">
+                    <p>Team: left</p>
+                    <p>Name: Nick</p>
+                </div>        
+            </div>
+            <p>Message: Hi!</p>
+        </div-->
+
+        <div class="mt-5">
+
+            <div class="form-inline d-flex justify-content-between ">
+
+                <div class="md-form">
+                    <input type="text" id="form91" class="form-control" style="width: 18rem">
+                    <label for="form91">Type your message</label>
+                </div>
+
+                <div class="md-form">
+                    <a class="btn btn-cyan btn-rounded send-chat-message"><i class="fa fa-send"></i></a>
+                </div>
+
+            </div>
+                                        
+        </div>  
+
+    </div>
+    <!--/.Panel 1-->
+
+    <!--Panel 1-->
+    <div class="tab-pane fade" id="chats-tab" role="tabpanel">
+        <div class="list-group" id="chats-container">
+            
+        </div>
+    </div>
+    <!--/.Panel 1-->
+
+    <!--Panel 2-->
+    <div class="tab-pane fade in show active" id="events-tab" role="tabpanel">
+        {% event_list %}
+    </div>
+    <!--/.Panel 2-->
+
+    <!--Panel 3-->
+    <div class="tab-pane fade" id="profile-panel" role="tabpanel">
+        <div style="text-align: center">
+            <p><a href="{% url 'avatar_change' %}">{% avatar user 60 class="rounded-circle img-responsive" id="user_avatar" %}</a></p>
+            <p>{{ user.username }}</p>
+            <form class="form-inline d-flex justify-content-between ">
+
+                <div class="md-form">
+                    <input type="text" id="form91" class="form-control validate" style="width: 18rem" autocomplete="false">
+                    <label for="form91" data-error="wrong" data-success="right">Change your username</label>
+                </div>
+
+                <div class="md-form">
+                    <a class="btn btn-cyan btn-rounded">Save</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+    <!--/.Panel 3-->
+
+</div>
+                            
+
+
+      
+</div>
+<script type="text/javascript" src="{% static 'js/compiled.min.js' %}"></script>
+<script type="text/javascript">
+
+    var currentRoom;
+    var currentTeam;
+    var currentTeamName;
+    var messages = new Object();
+
+    
+    var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
+    chat_socket = new WebSocket(ws_scheme + "://" + window.location.host + "/widget-chat/");
+
+    chat_socket.onmessage = function(e) {
+        data = JSON.parse(e.data);
+        console.log(data)
+        if (data['msg_type'] === 4 ) {
+            joinToRoomHandler(data);
+        }
+        if (data['msg_type'] === 0) {
+            messageHandler(data);
+            addToMessages(data);
+        }
+        if (data['join']) {
+            addToChatsHandler(data);
+        }
+
+    };
+
+
+
+    chat_socket.onopen = function() {
+      //chat_socket.send(" connected to chat");
+      console.log("Connected to chat socket");
+    };
+
+    chat_socket.onclose = function() {
+      //chat_socket.send(" disconnected from chat");   
+      console.log("Disconnected from chat socket");
+    };
+
+    if (chat_socket.readyState == WebSocket.OPEN) chat_socket.onopen();
+
+    $("#form91").keyup(function(e){ 
+        var code = e.which; // recommended to use e.which, it's normalized across browsers
+        if(code==13)e.preventDefault();
+        if(code==13){
+            //$("#displaysomething").html($(this).val());
+            sendMessage();
+            } // missing closing if bra…
+    });
+
+    $('.send-chat-message').on('click', function(){
+        sendMessage()
+    });
+
+
+
+    function joinToRoom(room, team, teamname) {
+        chat_socket.send(JSON.stringify({
+            "command": "join",
+            "room": room,
+            "team": team,
+            "teamname": teamname,
+        }));
+    };
+
+    function joinToRoomHandler(data) {
+        $('#events-tab').toggleClass('in show active');
+        $('a[href$="#events-tab"]').toggleClass('active');
+        $('#chat-tab').addClass('in show active');
+        $('a[href$="#chat-tab"]').addClass('active');
+
+        $("#event-container-" + data['room']).remove();
+
+        $('#chat-container').append('<div class="message d-flex flex-column mb-3"><div class="p2 text-center"><p>' + data['username']  +  ' joined the room</p></div></div>');
+
+        currentRoom = data['room'];
+        currentTeam =  data['team'];
+        currentTeamName =  data['teamname'];
+
+    };
+
+    function addToChatsHandler(data) {
+        $('#chats-container').append('<a onclick="selectChatHandler(' + data['room'] + ');" class="list-group-item d-flex justify-content-between align-items-center">' + data['name'] + '<span class="badge badge-cyan badge-pill" id="badge' + data['room'] +'"></span></a>')
+    }
+
+    function selectChatHandler(room_id) {
+        $('#chats-tab').toggleClass('in show active');
+        $('a[href$="#chats-tab"]').toggleClass('active');
+        $('#chat-tab').addClass('in show active');
+        $('a[href$="#chat-tab"]').addClass('active');
+
+        $('#chat-container').empty();
+
+        //for (data in messages['room_id']) {
+        //    messageHandler(data);
+        //} 
+
+
+    }
+
+    function messageHandler(data) {
+
+        if (data['team'] === 'home') {
+            $('#chat-container').append('<div class="message d-flex flex-column mb-3"><div class="d-flex flex-row"><div class="p-2"><img class="rounded-circle img-responsive" src="https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman1-512.png" width="60" height="60"></div><div class="d-flex flex-column p-2"><p>' + data['teamname'] + '</p><p>' + data['username'] + '</p></div></div></div><div class="d-flex justify-content-between"><div style="overflow-wrap: break-word; width: 80%"><p">' + data['message'] + '</p></div><p style="font-size: 0.75rem">' + data['timestamp'] +'</p></div>');
+        } else {
+            $('#chat-container').append('<div class="message d-flex flex-column mb-3"><div class="d-flex flex-row-reverse"><div class="p-2"><img class="rounded-circle img-responsive" src="https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman2-512.png" width="60" height="60"></div><div class="d-flex flex-column p-2"><p>' + data['teamname'] + '</p><p>' + data['username'] + '</p></div></div></div><div class="d-flex justify-content-between"><div style="overflow-wrap: break-word; width: 80%"><p">' + data['message'] + '</p></div><p style="font-size: 0.75rem">' + data['timestamp'] +'</p></div>');
+        }
+    }
+
+    function addToMessages(data) {
+        messages[data['room']] = data['room']; 
+        //messages[data['room']]['room'] = data['room'];
+        //messages[data['room']]['teamname'] = data['teamname'];
+        messages[data['room']]['username'] = data['username'];
+        //messages[data['room']]['message'] = data['message'];
+        //messages[data['room']]['timestamp'] = data['timestamp'];
+        console.log(messages)
+        console.log(messages[data['room']['username']])
+        console.log(data['teamname'])
+    }
+
+    function sendMessage() {
+        var data = $('#form91').val();
+        if (($.trim(data)).length > 0) { 
+            
+            chat_socket.send(JSON.stringify({
+                "command": "send",
+                "message": $.trim(data),
+                "room": currentRoom,
+                "team": currentTeam,
+                "teamname": currentTeamName,
+            }));
+            $('#form91').val('');
+            $('label[for$="form91"]').toggleClass('active');
+        } else {
+            console.log('empty message');
+        };
+    };
+</script>
+</body>
+</html>
+
+                
+
+                

@@ -5,11 +5,45 @@ from celery import shared_task
 from django.dispatch import receiver
 from django.db.models.signals import pre_save, post_save
 from annoying.functions import get_object_or_None
+from channels import Group
 
 
-def send_notification(notification_pk, event_pk, message):
-	event = get_object_or_None(Event, pk=event_pk)
+@shared_task
+def schedule_notification(notification_pk):
 	notification = get_object_or_None(Notification, pk=notification_pk)
+	print(notification.event.status)
+	if notification and notification.event.status is not 'end':
+		print('send_notification')
+		send_notification.apply_async(args=(notification_pk, ), countdown=int(notification.every)*60)
+		print(int(notification.every)*60)
+
+
+
+@shared_task
+def send_notification(notification_pk):
+	notification = get_object_or_None(Notification, pk=notification_pk)
+	event = get_object_or_None(Event, pk=notification.event.pk)
+
+	if notification and event:
+		print('yes')
+
+		message = notification.message
+
+		Group('chat-%s' % event.team_left.pk).send({
+			"text": json.dumps({
+				"notification_message": notification.message
+			}),
+		}, immediately=True)
+
+		Group('chat-%s' % event.team_right.pk).send({
+			"text": json.dumps({
+				"notification_message": notification.message
+			}),
+		}, immediately=True)
+		print('seeeeend')
+		schedule_notification.apply_async(args=(notification_pk, ))
+
+	'''
 	if event:
 		if event.status == 'end':
 			task = get_object_or_None(
@@ -23,6 +57,7 @@ def send_notification(notification_pk, event_pk, message):
 		else:
 			pass
 			#send_notification
+	'''
 
 @shared_task
 def change_status(event_pk):
@@ -46,13 +81,18 @@ def change_event_status(sender, instance, created, **kwargs):
 		if instance.status == 'soon':
 			countdown = instance.start_date - instance.created
 		elif instance.status == 'online':
-			countdown = instance.end_date - instance.start_date 
+			countdown = instance.end_date - instance.start_date
+
 		change_status.apply_async(args=(instance.pk, ), countdown=countdown.seconds)
 
 
 @receiver(post_save, sender=Notification)
 def schedule_task(sender, instance, created, **kwargs):
 	if created:
+		print('created')
+		schedule_notification(instance.pk)
+		print('send notification')
+		'''
 		every = instance.every
 
 		schedule, created = IntervalSchedule.objects.get_or_create(
@@ -77,3 +117,4 @@ def schedule_task(sender, instance, created, **kwargs):
 					}),
 				expires=None,
 				)
+		'''

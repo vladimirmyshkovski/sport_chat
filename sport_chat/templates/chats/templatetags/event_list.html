@@ -1,0 +1,23 @@
+{% load events cropping %}
+
+{% if events %}
+	{% for event in events %}
+	<div id='event-container-{{ event.pk }}'> 
+		<duv class="text-center">
+			<p>{{ event.name }}</p>
+		</duv>
+		<div class="d-flex justify-content-between">
+			<div class="d-flex flex-column text-center">
+				<img src="{% cropped_thumbnail event.home_team "cropping" scale=0.4 %}" class="img-responsive">		
+				<p>{{ event.team_left }}</p>
+				<button onclick="joinToRoom({{ event.pk }}, 'home', '{{ event.home_team.name }}');" class="btn btn-rounded btn-cyan">Join to chat</button>
+			</div>
+			<div class="d-flex flex-column text-center">
+				<img src="{% cropped_thumbnail event.away_team "cropping" scale=0.4 %}" class="img-responsive">
+				<p>{{ event.team_right }}</p>
+				<button onclick="joinToRoom({{ event.pk }}, 'away', '{{ event.home_team.name }}');" class="btn btn-rounded btn-cyan">Join to chat</button>
+			</div>
+		</div>
+	</div>
+	{% endfor %}
+{% endif %}

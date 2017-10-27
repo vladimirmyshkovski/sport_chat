@@ -14,4 +14,3 @@ class EventAdmin(admin.ModelAdmin):
 admin.site.register(Event, EventAdmin)
 admin.site.register(Team, TeamAdmin)
 admin.site.register(Notification)
-
