@@ -10,8 +10,12 @@ from django.utils.encoding import python_2_unicode_compatible
 from model_utils.models import TimeStampedModel, SoftDeletableModel
 from channels import Group
 
-from .settings import MSG_TYPE_MESSAGE
+from .settings import MSG_TYPE_MESSAGE, MESSAGE_TYPES_CHOICES
 import ujson as json
+from .signals import create_message
+
+from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 
 def team_flag_directory_path(instance, filename):
@@ -92,9 +96,33 @@ class Event(Base):
 		monitor='status', 
 		when=['end']
 	)
+	users = models.ManyToManyField(
+		settings.AUTH_USER_MODEL, 
+		blank=False
+	)
 
 	def __str__(self):
 		return self.name
+
+	def clean(self):
+		event = Event.objects.exclude(
+			Q(status='end'),
+		).filter(
+			Q(home_team=self.home_team, away_team=self.away_team) | 
+			Q(home_team=self.away_team, away_team=self.home_team) |
+			Q(home_team=self.home_team) | Q(home_team=self.away_team) |
+			Q(away_team=self.home_team) | Q(away_team=self.away_team)
+		).exists()
+		if event:
+			raise ValidationError(_('You must end the event with these commands before you start a new one.'))
+
+		if self.home_team == self.away_team:
+			raise ValidationError(_('You must end the event with these commands before you start a new one.'))
+
+
+		if self.start_date > self.end_date:
+			raise ValidationError(_('Start date can not be longer than end date.'))
+
 
 	@property
 	def websocket_group(self):
@@ -104,19 +132,51 @@ class Event(Base):
 	    """
 	    return Group("room-%s" % self.id)
 
-	def send_message(self, message, user, team=None, teamname=None, msg_type=MSG_TYPE_MESSAGE):
-	    """
-	    Called to send a message to the room on behalf of a user.
-	    """
-	    final_msg = {
-	    	'room': str(self.id), 'message': message, 'username': user.username, 'team': team, 
-	    	'teamname': teamname, 'msg_type': msg_type, "timestamp": timezone.now().strftime('%p:%I:%M:%S')
-	    }
+	def add_to_room(self, user):
+		if not user in self.users.all():
+			self.users.add(user)
+			self.save()
 
-	    # Send out the message to everyone in the room
-	    self.websocket_group.send(
-	        {"text": json.dumps(final_msg)}
-	    )
+	def leave_from_room(self, room):
+		if user in self.users.all():
+			self.users.delete(user)
+			self.save()
+
+	def send_message(self, message, user, team_id=None, team_align=None, team_name=None, msg_type=MSG_TYPE_MESSAGE):
+		"""
+		Called to send a message to the room on behalf of a user.
+		"""
+		final_msg = {
+			'room_id': str(self.id), 'message': message, 'username': user.username, 'team_id': team_id, 
+			'team_name': team_name, 'msg_type': msg_type, "timestamp": timezone.now().strftime('%I:%M:%S %p'),
+			'team_align': team_align
+		}
+
+		'''
+		create_message.send(
+			sender=self.__class__, user=user, team=team_id, event=self.id, 
+			message=message, msg_type=msg_type, team_type=team_align
+			)
+
+		
+		def send_pizza(self, toppings, size):
+		    pizza_done.send(sender=self.__class__, toppings=toppings, size=size)
+
+		team = Team.objects.get(id=team_id)
+		if msg_type == 4:
+			message = '{} joined the room'.format(user.username)
+		event_message = Message.objects.create(
+			event = self, message = message, user = user, team = team, team_type = team_align,
+			msg_type = msg_type  
+			)
+		'''
+
+
+
+		# Send out the message to everyone in the room
+		self.websocket_group.send(
+		    {"text": json.dumps(final_msg)}
+		)
 
 
 @python_2_unicode_compatible
@@ -140,17 +200,38 @@ class Notification(Base):
 
 @python_2_unicode_compatible
 class Message(Base):
-	room = models.CharField(max_length=50)
+
+	TEAM_TYPES = Choices(
+		('home', 'home', _('Home')), 
+		('away', 'away', _('Away')),
+	)
+	#room = models.CharField(max_length=50)
 	event = models.ForeignKey(
-		Event
+		Event,
+		related_name='event_messages'
 	)
 	team = models.ForeignKey(
 		Team,
+		related_name='team_messages',
 		null=True,
-	) 
+	)
+	msg_type = models.PositiveSmallIntegerField(
+		choices=MESSAGE_TYPES_CHOICES,
+		default=MESSAGE_TYPES_CHOICES[0][0],
+	)
+	team_type = models.CharField(
+		choices=TEAM_TYPES, 
+		default=TEAM_TYPES.home,
+		max_length=4
+	)
 	user = models.ForeignKey(settings.AUTH_USER_MODEL)
 	timestamp = models.DateTimeField(db_index=True, default=timezone.now)
-	content = models.TextField()
+	message = models.TextField()
+
+	@property
+	def human_timestamp(self):
+		return self.timestamp.strftime('%I:%M:%S %p')
 
 	def __str__(self):
 		return '{0} at {1}'.format(self.user, self.timestamp)
+

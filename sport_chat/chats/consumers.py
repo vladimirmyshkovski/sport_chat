@@ -178,6 +178,7 @@ def widget_chat_message(message):
 	})
 	'''
 	payload = json.loads(message['text'])
+	print(payload)
 	payload['reply_channel'] = message.content['reply_channel']
 	Channel("chat.receive").send(payload)
 
@@ -202,13 +203,15 @@ def chat_join(message):
 	# Find the room they requested (by ID) and add ourselves to the send group
 	# Note that, because of channel_session_user, we have a message.user
 	# object that works just like request.user would. Security!
-	room = get_room_or_error(message["room"], message.user)
-	team = message['team']
-	teamname = message['teamname']
+	room = get_room_or_error(message["room_id"], message.user)
+	team_id = message['team_id']
+	team_name = message['team_name']
+	team_align = message['team_align']
+	team_name = message['team_name']
 	
 	# Send a "enter message" to the room if available
 	if NOTIFY_USERS_ON_ENTER_OR_LEAVE_ROOMS and room.id not in message.channel_session['rooms']:
-	    room.send_message(None, message.user, team, teamname, MSG_TYPE_ENTER)
+	    room.send_message(None, message.user, team_id, team_align, team_name, MSG_TYPE_ENTER)
 
 	# OK, add them in. The websocket_group is what we'll send messages
 	# to so that everyone in the chat room gets them.
@@ -218,13 +221,15 @@ def chat_join(message):
 	# Done server-side so that we could, for example, make people
 	# join rooms automatically.
 
+	room.add_to_room(message.user)
+
 	message.reply_channel.send({
 	    "text": json.dumps({
 	        "join": str(room.id),
-	        "name": room.name,
-	        "team": team,
-	        "teamname": teamname,
-	        "timestamp": timezone.now().strftime('%I:%M:%S')
+	        "room_name": room.name,
+	        "team_id": team_id,
+	        "team_name": team_name,
+	        "timestamp": timezone.now().strftime('%I:%M:%S %p')
 
 	    }),
 	})
@@ -235,10 +240,14 @@ def chat_join(message):
 def chat_leave(message):
 	# Reverse of join - remove them from everything.
 	room = get_room_or_error(message["room"], message.user)
+	team_id = message['team_id']
+	team_name = message['team_name']
+	team_align = message['team_align']
+	team_name = message['team_name']
 
 	# Send a "leave message" to the room if available
 	if NOTIFY_USERS_ON_ENTER_OR_LEAVE_ROOMS:
-	    room.send_message(None, message.user, MSG_TYPE_LEAVE, team, teamname)
+	    room.send_message(None, message.user, team_id, team_align, team_name, MSG_TYPE_LEAVE)
 
 	room.websocket_group.discard(message.reply_channel)
 	message.channel_session['rooms'] = list(set(message.channel_session['rooms']).difference([room.id]))
@@ -254,11 +263,14 @@ def chat_leave(message):
 @catch_client_error
 def chat_send(message):
 	# Check that the user in the room
-	if int(message['room']) not in message.channel_session['rooms']:
-	    raise ClientError("ROOM_ACCESS_DENIED")
+	#if int(message['room']) not in message.channel_session['rooms']:
+	#    raise ClientError("ROOM_ACCESS_DENIED")
 	# Find the room they're sending to, check perms
-	room = get_room_or_error(message["room"], message.user)
-	team = message['team']
-	teamname = message['teamname']
+	#room = get_room_or_error(message["room"], message.user)
+	print(message)
+	#team_id = message['team_id']
+	#team_name = message['team_name']
+	#team_align = message['team_align']
+	#team_name = message['team_name']
 	# Send the message along
-	room.send_message(message["message"], message.user, team, teamname)
+	#room.send_message(message["message"], message.user, team_id, team_align, team_name)

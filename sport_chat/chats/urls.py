@@ -3,6 +3,7 @@ from django.conf.urls import url
 from django.views.generic import TemplateView
 
 from . import views
+from . import apis
 
 urlpatterns = [
 
@@ -89,4 +90,24 @@ urlpatterns = [
         name='notification_list',
     ),
 
+]
+
+
+
+api_urlpatterns = [
+    url(
+        regex="^events/$",
+        view=apis.EventListApiView.as_view(),
+        name='event_list',
+    ),
+    url(
+        regex="^events/(?P<pk>\d+)/$",
+        view=apis.EventDetailApiView.as_view(),
+        name='event_detail',
+    ),
+    url(
+        regex="^events/(?P<pk>\d+)/messages/$",
+        view=apis.EventMessageListApiView.as_view(),
+        name='event_messages_list',
+    ),
 ]

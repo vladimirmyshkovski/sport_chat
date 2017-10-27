@@ -117,5 +117,3 @@ class NotificationUpdateView(LoginRequiredMixin, UpdateView):
 class NotificationListView(LoginRequiredMixin, ListView):
 
     model = Notification
-
-

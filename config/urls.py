@@ -4,6 +4,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.views.generic import TemplateView
 from django.views import defaults as default_views
+from sport_chat.chats.urls import api_urlpatterns
 
 urlpatterns = [
     url(r'^$', TemplateView.as_view(template_name='pages/home.html'), name='home'),
@@ -20,6 +21,8 @@ urlpatterns = [
     
     url(r'^users/', include('sport_chat.users.urls', namespace='users')),
     url(r'^chats/', include('sport_chat.chats.urls', namespace='chats')),
+
+    url(r'^api/v1/', include(api_urlpatterns, namespace='api_v1')),
 
     # Your stuff: custom urls includes go here
 

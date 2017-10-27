@@ -1,11 +1,13 @@
 import ujson as json
-from .models import Event, Notification
+from .models import Event, Notification, Message
 from celery import shared_task
 #from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.dispatch import receiver
 from django.db.models.signals import pre_save, post_save
 from annoying.functions import get_object_or_None
 from channels import Group
+from .signals import create_message
+
 
 
 @shared_task
@@ -118,3 +120,27 @@ def schedule_task(sender, instance, created, **kwargs):
 				expires=None,
 				)
 		'''
+@shared_task
+def create_message_task(**kwargs):
+
+	if kwargs['msg_type'] == 4:
+		message = '{} joined the room'.format(kwargs['user'].username)
+	elif kwargs['msg_type'] == 5:
+		message = '{} left the room'.format(kwargs['user'].username)		
+
+	if not message:
+		message = kwargs['message']
+
+	event = get_object_or_None(Event, kwargs['event'])
+	
+	team = get_object_or_None(Team, kwargs['team'])
+
+	if event and team:
+		event_message = Message.objects.create(
+			user = user, event = event, team_type = kwargs['team_type'], 
+			message = message, msg_type = kwargs['msg_type'], team = team 
+		) 	
+
+@receiver(create_message, sender=Event)
+def receiver_create_message(sender, *args, **kwargs):
+	create_message_task.apply_async(kwargs=kwargs)
