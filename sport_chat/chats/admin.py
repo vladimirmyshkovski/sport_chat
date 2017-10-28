@@ -8,7 +8,7 @@ class TeamAdmin(ImageCroppingMixin, admin.ModelAdmin):
 
 
 class EventAdmin(admin.ModelAdmin):
-	exclude = ['started_at' ,'ended_at']
+	exclude = ['started_at' ,'ended_at', 'data', 'users']
 
 
 admin.site.register(Event, EventAdmin)

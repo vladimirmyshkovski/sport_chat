@@ -139,7 +139,8 @@ def create_message_task(**kwargs):
 		event_message = Message.objects.create(
 			user = user, event = event, team_type = kwargs['team_type'], 
 			message = message, msg_type = kwargs['msg_type'], team = team 
-		) 	
+		)
+		print('message was created') 	
 
 @receiver(create_message, sender=Event)
 def receiver_create_message(sender, *args, **kwargs):

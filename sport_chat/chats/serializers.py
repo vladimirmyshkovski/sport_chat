@@ -30,14 +30,7 @@ class EventSerializer(serializers.ModelSerializer):
 		user = self.context['request'].user
 		return user in obj.users.all()
 
-	#def event_messages(self, obj):
-	#    messages = Message.objects.filter(event=obj)
-	#    paginator = pagination.PageNumberPagination()
-	#    page = paginator.paginate_queryset(messages, self.context['request'])
-	#    serializer = MessageSerializer(page, many=True, context={'request': self.context['request']})
-	#    return serializer.data
-
 	class Meta:
 	    model = Event
-	    fields = ('id', 'status', 'name', 'home_team', 'away_team', 'messages', 'in_room')
+	    fields = ('id', 'status', 'name', 'home_team', 'away_team', 'messages', 'data', 'in_room')
 

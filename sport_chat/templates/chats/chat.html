@@ -19,9 +19,9 @@
 <!-- Nav tabs -->
 <div class="tabs-wrapper"> 
     <ul class="nav classic-tabs tabs-cyan" role="tablist">
-        <li class="nav-item">
+        <!--li class="nav-item">
             <a class="nav-link waves-light" data-toggle="tab" href="#chat-tab" role="tab"><i class="fa fa-comment fa-2x" aria-hidden="true"></i><br> Chat</a>
-        </li>
+        </li-->
         <li class="nav-item">
             <a class="nav-link waves-light" data-toggle="tab" href="#chats-tab" role="tab"><i class="fa fa-comments fa-2x" aria-hidden="true"></i><br> Chats</a>
         </li>
@@ -105,6 +105,8 @@
 <script type="text/javascript" src="{% static 'js/compiled.min.js' %}"></script>
 <script type="text/javascript">
 
+    var username = '{{ user.username }}';
+
     var currentRoom;
     var currentTeam;
     var currentTeamName;
@@ -122,7 +124,6 @@
         }
         if (data['msg_type'] === 0) {
             messageHandler(data);
-            addToMessages(data);
         }
         if (data['join']) {
             addToChatsHandler(data);
@@ -176,7 +177,9 @@
                 '</div>' +
                 '</div>');
             } else {
-                $('#chat-container').append('<div class="chat-container"><div id="chat-container-' + event.id + '" class="message d-flex flex-column mb-3"></div></div>');
+                room_data = event['data'][username];
+                console.log(room_data);
+                $('#chat-container').append('<div class="chat-container"><div id="chat-container-' + event.id + '"  data-team_id="' + room_data['team_id'] + '" data-team_name="' + room_data['team_name'] + '" data-team_align="' + room_data['team_align'] + '"  class="message d-flex flex-column mb-3"></div></div>');
                 addToChatsHandler(event);
                 messageInsert(event);
             };
@@ -251,6 +254,11 @@
         $('.chat-container').hide();
         $('#chat-container-'+ room_id).parent().show();
 
+        currentRoom = room_id;
+        currentTeam =  $('#chat-container-'+ room_id).attr('data-team_id');
+        currentTeamName =  $('#chat-container-'+ room_id).attr('data-team_name');
+        currentTeamAlign = $('#chat-container-'+ room_id).attr('data-team_align');
+
         //$('#chat-container').empty();
 
         //for (data in messages['room_id']) {
@@ -278,22 +286,23 @@
             message = data['results'][message];
 
                 if (message['team_type'] === 'home') {
-                    $('#chat-container-' + room_id).append('<div class="message d-flex flex-column mb-3"><div class="d-flex flex-row"><div class="p-2"><img class="rounded-circle img-responsive" src="https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman1-512.png" width="60" height="60"></div><div class="d-flex flex-column p-2"><p>' + message['name'] + '</p><p>' + message['user'].name + '</p></div></div></div><div class="d-flex justify-content-between"><div style="overflow-wrap: break-word; width: 80%"><p">' + message['message'] + '</p></div><p style="font-size: 0.75rem">' + message['human_timestamp'] +'</p></div>');
+                    $('#chat-container-' + room_id).append('<div class="message d-flex flex-column mb-3"><div class="d-flex flex-row"><div class="p-2"><img class="rounded-circle img-responsive" src="https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman1-512.png" width="60" height="60"></div><div class="d-flex flex-column p-2"><p>' + message['team'].name + '</p><p>' + message['user'].username + '</p></div></div></div><div class="d-flex justify-content-between"><div style="overflow-wrap: break-word; width: 80%"><p">' + message['message'] + '</p></div><p style="font-size: 0.75rem">' + message['human_timestamp'] +'</p></div>');
                 } else {
-                    $('#chat-container-' + room_id).append('<div class="message d-flex flex-column mb-3"><div class="d-flex flex-row-reverse"><div class="p-2"><img class="rounded-circle img-responsive" src="https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman2-512.png" width="60" height="60"></div><div class="d-flex flex-column p-2"><p>' + message['name'] + '</p><p>' + message['user'].name + '</p></div></div></div><div class="d-flex justify-content-between"><div style="overflow-wrap: break-word; width: 80%"><p">' + message['message'] + '</p></div><p style="font-size: 0.75rem">' + message['human_timestamp'] +'</p></div>');
+                    $('#chat-container-' + room_id).append('<div class="message d-flex flex-column mb-3"><div class="d-flex flex-row-reverse"><div class="p-2"><img class="rounded-circle img-responsive" src="https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman2-512.png" width="60" height="60"></div><div class="d-flex flex-column p-2"><p>' + message['team'].name + '</p><p>' + message['user'].username + '</p></div></div></div><div class="d-flex justify-content-between"><div style="overflow-wrap: break-word; width: 80%"><p">' + message['message'] + '</p></div><p style="font-size: 0.75rem">' + message['human_timestamp'] +'</p></div>');
                 }
             }
         });
     }
 
-    function addToMessages(data) {
-        console.log(data)
-    }
+
 
     function sendMessage() {
         var data = $('#form91').val();
         if (($.trim(data)).length > 0) { 
-            
+            if (currentRoom == null || currentTeam == null || currentTeamName == null || currentTeamAlign == null) {
+
+            }
+
             chat_socket.send(JSON.stringify({
                 "command": "send",
                 "message": $.trim(data),

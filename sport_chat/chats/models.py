@@ -17,6 +17,8 @@ from .signals import create_message
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 
+from django.contrib.postgres.fields import JSONField
+
 
 def team_flag_directory_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/team_<name>/<filename>
@@ -100,6 +102,11 @@ class Event(Base):
 		settings.AUTH_USER_MODEL, 
 		blank=False
 	)
+	data = JSONField(
+		default={},
+		null=True, 
+		blank=False
+	)
 
 	def __str__(self):
 		return self.name
@@ -132,14 +139,16 @@ class Event(Base):
 	    """
 	    return Group("room-%s" % self.id)
 
-	def add_to_room(self, user):
+	def add_to_room(self, user, team_id, team_name, team_align):
 		if not user in self.users.all():
 			self.users.add(user)
+			self.data[user.username] = {'team_id': team_id, 'team_name': team_name, 'team_align': team_align}
 			self.save()
 
-	def leave_from_room(self, room):
+	def leave_from_room(self, user, team_name, team_align):
 		if user in self.users.all():
 			self.users.delete(user)
+			del self.data[user.username]
 			self.save()
 
 	def send_message(self, message, user, team_id=None, team_align=None, team_name=None, msg_type=MSG_TYPE_MESSAGE):
@@ -151,27 +160,12 @@ class Event(Base):
 			'team_name': team_name, 'msg_type': msg_type, "timestamp": timezone.now().strftime('%I:%M:%S %p'),
 			'team_align': team_align
 		}
-
-		'''
+		
+		# Send signal for create new message
 		create_message.send(
 			sender=self.__class__, user=user, team=team_id, event=self.id, 
 			message=message, msg_type=msg_type, team_type=team_align
 			)
-
-		
-		def send_pizza(self, toppings, size):
-		    pizza_done.send(sender=self.__class__, toppings=toppings, size=size)
-
-		team = Team.objects.get(id=team_id)
-		if msg_type == 4:
-			message = '{} joined the room'.format(user.username)
-		event_message = Message.objects.create(
-			event = self, message = message, user = user, team = team, team_type = team_align,
-			msg_type = msg_type  
-			)
-		'''
-
-
 
 		# Send out the message to everyone in the room
 		self.websocket_group.send(
@@ -205,7 +199,6 @@ class Message(Base):
 		('home', 'home', _('Home')), 
 		('away', 'away', _('Away')),
 	)
-	#room = models.CharField(max_length=50)
 	event = models.ForeignKey(
 		Event,
 		related_name='event_messages'
