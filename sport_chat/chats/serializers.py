@@ -1,7 +1,7 @@
 from rest_framework import serializers, pagination
 from .models import Message, Event, Team
 from sport_chat.users.serializers import UserSerializer
-
+from rest_framework.authtoken.models import Token
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -34,3 +34,11 @@ class EventSerializer(serializers.ModelSerializer):
 	    model = Event
 	    fields = ('id', 'status', 'name', 'home_team', 'away_team', 'messages', 'data', 'in_room')
 
+
+
+class TokenSerializer(serializers.ModelSerializer):
+	user = UserSerializer()
+
+	class Meta:
+		model = Token
+		fields = ('user', )

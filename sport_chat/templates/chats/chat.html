@@ -12,7 +12,28 @@
     <title></title>
 </head>
 <body>
+<script>
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '1814777725479455',
+      cookie     : true,
+      xfbml      : true,
+      version    : 'v2.7'
+    });
+      
+    FB.AppEvents.logPageView();
 
+  };
+
+  (function(d, s, id){
+     var js, fjs = d.getElementsByTagName(s)[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement(s); js.id = id;
+     js.src = "https://connect.facebook.net/en_US/sdk.js";
+     fjs.parentNode.insertBefore(js, fjs);
+   }(document, 'script', 'facebook-jssdk'));
+
+</script>
 <div class="container mt-5" style="width: 30rem">
 
 
@@ -105,7 +126,87 @@
 <script type="text/javascript" src="{% static 'js/compiled.min.js' %}"></script>
 <script type="text/javascript">
 
-    var username = '{{ user.username }}';
+
+    function getCookie(cname) {
+        var name = cname + "=";
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var ca = decodedCookie.split(';');
+        for(var i = 0; i <ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    }
+
+    function setCookie(cname, cvalue, exdays) {
+        var d = new Date();
+        d.setTime(d.getTime() + (exdays*24*60*60*1000));
+        var expires = "expires="+ d.toUTCString();
+        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+
+    var chatUserToken = getCookie('chatUserToken');
+    var chatUserUsername = getCookie('chatUserUsername');
+    var username = chatUserUsername;
+    console.log('USERNAME IS' + username)
+
+    console.log(chatUserToken);
+    
+
+    window.onload = function(){
+       if(typeof window.FB == 'undefined'){
+           alert('Facebook SDK is unable to load, display some alternative content for visitor');
+       }
+       else{
+          alert('Facebook is working just fine');
+
+
+            if (chatUserToken === '') {
+
+                FB.login(function(response) {
+                    console.log(response)
+                    accessToken = response['authResponse'].accessToken
+                    userID = response['authResponse'].userID
+                    $.ajax({
+                        url: "http://127.0.0.1:8000/rest-auth/facebook/",
+                        method: "post",
+                        data: {
+                            "access_token": accessToken,
+                            "code": userID
+                        }
+                    }).done(function(data) {
+                        console.log(data.key)
+                        setCookie('chatUserToken', data.key, 1)
+                        var chatUserToken = data.key; 
+                    })
+
+                }, {scope: 'public_profile,email'})
+
+            }
+
+            if (chatUserUsername === '') {
+                $.ajax({
+                    url: "http://127.0.0.1:8000/api/v1/token/" + chatUserToken + "",
+                    method: "get",
+                }).done(function(data) {
+                    console.log(data.user)
+                    console.log(data.user.username)
+                    setCookie('chatUserUsername', data.user.username, 1)
+                    var chatUserUsername = data.user.username;
+                    var username = chatUserUsername;
+                })
+            }
+
+       }
+    };
+
+
+    var csrftoken = getCookie('csrftoken');
 
     var currentRoom;
     var currentTeam;
@@ -114,7 +215,7 @@
 
     
     var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
-    chat_socket = new WebSocket(ws_scheme + "://" + window.location.host + "/widget-chat/");
+    chat_socket = new WebSocket(ws_scheme + "://" + window.location.host + "/widget-chat/token=" + chatUserToken);
 
     chat_socket.onmessage = function(e) {
         data = JSON.parse(e.data);
@@ -128,9 +229,49 @@
         if (data['join']) {
             addToChatsHandler(data);
         }
+        
+        if (data['error']){
+            if (data['error'] === 'USER_HAS_TO_LOGIN') {
+                FB.login(function(response) {
+                    console.log(response)
+                    accessToken = response['authResponse'].accessToken
+                    userID = response['authResponse'].userID
+                    $.ajax({
+                        url: "http://127.0.0.1:8000/rest-auth/facebook/",
+                        method: "post",
+                        data: {
+                            "access_token": accessToken,
+                            "code": userID
+                        }
+                    }).done(function(data) {
+                        console.log(data.key)
+                        setCookie('chatUserToken', data.key, 1)
+                    })
+
+                }, {scope: 'public_profile,email'});
+            }
+        }
 
     };
 
+    function waitForSocketConnection(socket, callback){
+        setTimeout(
+            function () {
+                if (socket.readyState !== 5) {
+                    chat_socket.onopen()
+                    console.log("Connection is made")
+                    if(callback != null){
+                        callback();
+                    }
+                    return;
+
+                } else {
+                    console.log("wait for connection...")
+                    waitForSocketConnection(chat_socket, null);
+                }
+
+            }, 500); // wait 500 miliseconds for the connection...
+    }
 
 
     chat_socket.onopen = function() {
@@ -139,55 +280,59 @@
     };
 
     chat_socket.onclose = function() {
-      //chat_socket.send(" disconnected from chat");   
+      //chat_socket.send(" disconnected from chat");
       console.log("Disconnected from chat socket");
+      waitForSocketConnection(chat_socket, null);
     };
 
     if (chat_socket.readyState == WebSocket.OPEN) chat_socket.onopen();
 
+    if ( username == '' ) {
 
+        setTimeout(function(){ console.log('username not set'); }, 50);
 
-    $.ajax({
-        url: "http://127.0.0.1:8000/api/v1/events/",
-        //context: document.body
-    }).done(function(data) {
-        for (event in data['results']){
-            event = data['results'][event];
-            if (event.in_room !== true) {
-                home = 'home';
-                away = 'away';
-                home_team_name = "'" + event['home_team'].name + "'";
-                away_team_name = "'" + event['away_team'].name + "'";
+    } else {
 
-                $('#events-tab').append('<div id="event-container-' + event.id + '">' + 
-                '<duv class="text-center">' +
-                '<p>' + event.name + '</p>' +
-                '</duv>' +
-                '<div class="d-flex justify-content-between">' +
-                '<div class="d-flex flex-column text-center">' +
-                '<img src="' + event['home_team'].flag + '" class="img-responsive" width=150 height=125>' +
-                '<p>' + event['home_team'].name + '</p>' +
-                '<button onclick="joinToRoom(' + event.id + ',' + event['home_team'].id + ', ' + home  + ', ' + home_team_name + ');" class="btn btn-rounded btn-cyan">Join to chat</button>' +
-                '</div>' +
-                '<div class="d-flex flex-column text-center">' +
-                '<img src="' + event['away_team'].flag + '" class="img-responsive" width=150 height=125>' +
-                '<p>' + event['away_team'].name + '</p>' +
-                '<button onclick="joinToRoom(' + event.id + ',' + event['away_team'].id + ', ' + away + ', ' + away_team_name + ');" class="btn btn-rounded btn-cyan">Join to chat</button>' +
-                '</div>' +
-                '</div>' +
-                '</div>');
-            } else {
-                room_data = event['data'][username];
-                console.log(room_data);
-                $('#chat-container').append('<div class="chat-container"><div id="chat-container-' + event.id + '"  data-team_id="' + room_data['team_id'] + '" data-team_name="' + room_data['team_name'] + '" data-team_align="' + room_data['team_align'] + '"  class="message d-flex flex-column mb-3"></div></div>');
-                addToChatsHandler(event);
-                messageInsert(event);
+        $.ajax({
+            url: "http://127.0.0.1:8000/api/v1/events/",
+            //context: document.body
+        }).done(function(data) {
+            for (event in data['results']){
+                event = data['results'][event];
+                if (event.in_room == true) {
+                    home = 'home';
+                    away = 'away';
+                    home_team_name = "'" + event['home_team'].name + "'";
+                    away_team_name = "'" + event['away_team'].name + "'";
+
+                    $('#events-tab').append('<div id="event-container-' + event.id + '">' + 
+                    '<duv class="text-center">' +
+                    '<p>' + event.name + '</p>' +
+                    '</duv>' +
+                    '<div class="d-flex justify-content-between">' +
+                    '<div class="d-flex flex-column text-center">' +
+                    '<img src="' + event['home_team'].flag + '" class="img-responsive" width=150 height=125>' +
+                    '<p>' + event['home_team'].name + '</p>' +
+                    '<button onclick="joinToRoom(' + event.id + ',' + event['home_team'].id + ', ' + home  + ', ' + home_team_name + ');" class="btn btn-rounded btn-cyan">Join to chat</button>' +
+                    '</div>' +
+                    '<div class="d-flex flex-column text-center">' +
+                    '<img src="' + event['away_team'].flag + '" class="img-responsive" width=150 height=125>' +
+                    '<p>' + event['away_team'].name + '</p>' +
+                    '<button onclick="joinToRoom(' + event.id + ',' + event['away_team'].id + ', ' + away + ', ' + away_team_name + ');" class="btn btn-rounded btn-cyan">Join to chat</button>' +
+                    '</div>' +
+                    '</div>' +
+                    '</div>');
+                } else {
+                    room_data = event['data'][username];
+                    $('#chat-container').append('<div class="chat-container"><div id="chat-container-' + event.id + '"  data-team_id="' + room_data['team_id'] + '" data-team_name="' + room_data['team_name'] + '" data-team_align="' + room_data['team_align'] + '"  class="message d-flex flex-column mb-3"></div></div>');
+                    addToChatsHandler(event);
+                    messageInsert(event);
+                };
             };
-        };
-        //$( this ).addClass( "done" );
-    });
+            //$( this ).addClass( "done" );
+        });
 
-
+    }
 
 
     $("#form91").keyup(function(e){ 
@@ -213,6 +358,7 @@
             "team_id": team_id,
             "team_align": team_align, 
             "team_name": team_name,
+            "token": chatUserToken
         }));
     };
 
@@ -279,12 +425,13 @@
 
     function messageInsert(data) {
         room_id = data['id'];
+        console.log(data['messages']);
         $.ajax({
             url: data['messages'],
         }).done(function(data) {
             for (message in data['results']){
             message = data['results'][message];
-
+            console.log(message);
                 if (message['team_type'] === 'home') {
                     $('#chat-container-' + room_id).append('<div class="message d-flex flex-column mb-3"><div class="d-flex flex-row"><div class="p-2"><img class="rounded-circle img-responsive" src="https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman1-512.png" width="60" height="60"></div><div class="d-flex flex-column p-2"><p>' + message['team'].name + '</p><p>' + message['user'].username + '</p></div></div></div><div class="d-flex justify-content-between"><div style="overflow-wrap: break-word; width: 80%"><p">' + message['message'] + '</p></div><p style="font-size: 0.75rem">' + message['human_timestamp'] +'</p></div>');
                 } else {
@@ -309,7 +456,9 @@
                 "room": currentRoom,
                 "team_id": currentTeam,
                 "team_name": currentTeamName,
-                "team_align": currentTeamAlign
+                "team_align": currentTeamAlign,
+                "token": chatUserToken
+
             }));
             $('#form91').val('');
             $('label[for$="form91"]').toggleClass('active');
@@ -317,6 +466,7 @@
             console.log('user ' + String({{ user.username }}) + ' try send empty message');
         };
     };
+
 </script>
 </body>
 </html>

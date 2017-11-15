@@ -1,5 +1,6 @@
-from .serializers import MessageSerializer, EventSerializer
+from .serializers import MessageSerializer, EventSerializer, TokenSerializer
 from rest_framework import generics
+from rest_framework.authtoken.models import Token
 
 from .models import (
     Team,
@@ -34,7 +35,16 @@ class EventDetailApiView(generics.RetrieveAPIView):
 class EventMessageListApiView(generics.ListAPIView):
     
     def get_queryset(self):
-    	#queryset = super(EventMessageApiView, self).get_queryset()
     	return Message.objects.filter(event=self.kwargs['pk']).order_by('timestamp')
 
     serializer_class = MessageSerializer
+
+
+class TokenDetailApiView(generics.RetrieveAPIView):
+    lookup_field = 'key'
+
+    def get_queryset(self):
+        print('KEY IS: ' + str(Token.objects.get(key=self.kwargs['key'])))
+        return Token.objects.all()
+    
+    serializer_class = TokenSerializer

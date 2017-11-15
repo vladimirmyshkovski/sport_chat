@@ -48,12 +48,14 @@ THIRD_PARTY_APPS = [
     'crispy_forms',  # Form layouts
     'allauth',  # registration
     'allauth.account',  # registration
-    'allauth.socialaccount',  # registration
     'rest_auth.registration',
+    'allauth.socialaccount',  # registration
+    'allauth.socialaccount.providers.facebook',
     'channels',
     'avatar',
     'easy_thumbnails',
     'image_cropping',
+    'corsheaders'
     #'django_celery_beat', # tasks scheduler
 ]
 
@@ -79,9 +81,11 @@ INSTALLED_APPS = PRE_APPS + DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -303,6 +307,19 @@ THUMBNAIL_PROCESSORS = (
 ) + thumbnail_settings.THUMBNAIL_PROCESSORS
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        #'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        #'sport_chat.chats.authentication.CustomTokenAuthentication',
+    ),
+    #'DEFAULT_PERMISSION_CLASSES': (
+    #    'rest_framework.permissions.IsAuthenticated',
+    #),    
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 5
 }
+
+CORS_ORIGIN_WHITELIST = (
+    'http://localhost:8000/chat/'
+)

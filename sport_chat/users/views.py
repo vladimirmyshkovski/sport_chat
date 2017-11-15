@@ -43,3 +43,37 @@ class UserListView(LoginRequiredMixin, ListView):
     # These next two lines tell the view to index lookups by username
     slug_field = 'username'
     slug_url_kwarg = 'username'
+
+
+from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
+from rest_auth.registration.views import SocialLoginView
+
+class FacebookLogin(SocialLoginView):
+    adapter_class = FacebookOAuth2Adapter
+
+
+
+
+
+from rest_framework.authtoken.models import Token 
+from django.contrib.auth import authenticate, login
+from django.core import serializers
+from django.shortcuts import get_object_or_404
+
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+
+@api_view(['GET'])
+def token_auth(request, token):
+    try:
+        token = Token.objects.get(key=token)
+        user = authenticate(
+            username = token.user.username,
+            password = token.user.password
+            )
+        login(request, token.user, backend='allauth.account.auth_backends.AuthenticationBackend')
+    except Token.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    return Response(status=status.HTTP_200_OK)

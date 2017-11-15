@@ -92,6 +92,7 @@ urlpatterns = [
 
 ]
 
+from sport_chat.users.views import token_auth
 
 
 api_urlpatterns = [
@@ -109,5 +110,10 @@ api_urlpatterns = [
         regex="^events/(?P<pk>\d+)/messages/$",
         view=apis.EventMessageListApiView.as_view(),
         name='event_messages_list',
+    ),
+    url(
+        regex = "^token/(?P<key>[^/]+)/$", 
+        view = apis.TokenDetailApiView.as_view(), 
+        name = "token_detail",
     ),
 ]

@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 from django.views import defaults as default_views
 from sport_chat.chats.urls import api_urlpatterns
+from sport_chat.users.views import FacebookLogin
 
 urlpatterns = [
     url(r'^$', TemplateView.as_view(template_name='pages/home.html'), name='home'),
@@ -20,13 +21,15 @@ urlpatterns = [
     url(r'^avatar/', include('avatar.urls')),
     
     url(r'^users/', include('sport_chat.users.urls', namespace='users')),
+    # Your stuff: custom urls includes go here
+
     url(r'^chats/', include('sport_chat.chats.urls', namespace='chats')),
 
     url(r'^api/v1/', include(api_urlpatterns, namespace='api_v1')),
 
-    # Your stuff: custom urls includes go here
-
-
+    url(r'^rest-auth/', include('rest_auth.urls')),
+    url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
+    url(r'^rest-auth/facebook/$', FacebookLogin.as_view(), name='fb_login')
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
