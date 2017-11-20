@@ -34,9 +34,24 @@ custom_routing = [
 #]
 
 
+
+
+from channels.generic.websockets import WebsocketDemultiplexer
+from channels.routing import route_class
+
+from sport_chat.chats.bindings import TeamBinding
+
+class APIDemultiplexer(WebsocketDemultiplexer):
+
+    consumers = {
+      'teams': TeamBinding.consumer
+    }
+
 channel_routing = [
     #include(chat_routing),
-    include(widget_chat_routing),
-    include(custom_routing),
+    #include(widget_chat_routing),
+    #include(custom_routing),
     #include(notification_routing),
+    route_class(APIDemultiplexer)
+
 ]

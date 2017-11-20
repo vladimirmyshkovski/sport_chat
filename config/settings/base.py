@@ -55,7 +55,8 @@ THIRD_PARTY_APPS = [
     'avatar',
     'easy_thumbnails',
     'image_cropping',
-    'corsheaders'
+    'corsheaders',
+    'channels_api'    
     #'django_celery_beat', # tasks scheduler
 ]
 
@@ -323,3 +324,9 @@ REST_FRAMEWORK = {
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:8000/chat/'
 )
+
+CHANNELS_API = {
+  'DEFAULT_PAGE_SIZE': 25,
+  'DEFAULT_PERMISSION_CLASSES': ('channels_api.permissions.AllowAny',)
+
+}
