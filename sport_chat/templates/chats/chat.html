@@ -441,7 +441,11 @@
                     $('#chat-container-' + room_id).append('<div class="message d-flex flex-column mb-3"><div class="d-flex flex-row-reverse"><div class="p-2"><img class="rounded-circle img-responsive" src="https://cdn0.iconfinder.com/data/icons/user-pictures/100/matureman2-512.png" width="60" height="60"></div><div class="d-flex flex-column p-2"><p>' + message['team'].name + '</p><p>' + message['user'].username + '</p></div></div></div><div class="d-flex justify-content-between"><div style="overflow-wrap: break-word; width: 80%"><p">' + message['message'] + '</p></div><p style="font-size: 0.75rem">' + message['human_timestamp'] +'</p></div>');
                 }
             }
-        });
+        })
+        .fail(function(jqXHR, textStatus) {
+            console.log( jqXHR );
+            console.log( "Request failed: " + textStatus );
+        })
     }
 
 
