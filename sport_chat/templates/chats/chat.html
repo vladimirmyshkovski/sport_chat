@@ -427,6 +427,8 @@
     }
 
     function messageInsert(data) {
+        console.log(data);
+        console.log('inserting message')
         room_id = data['id'];
         console.log(data['messages']);
         $.ajax({
