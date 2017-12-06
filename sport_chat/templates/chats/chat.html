@@ -183,6 +183,9 @@
                         console.log(data.key)
                         setCookie('chatUserToken', data.key, 1)
                         var chatUserToken = data.key; 
+                    }).fail(function(jqXHR, textStatus) {
+                        console.log( "jqXHR: " + jqXHR );
+                        console.log( "Request failed: " + textStatus );
                     })
 
                 }, {scope: 'public_profile,email'})
