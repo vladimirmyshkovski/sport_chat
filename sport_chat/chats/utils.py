@@ -5,7 +5,6 @@ from .models import Event as Room
 #from .models import Room
 from annoying.functions import get_object_or_None
 from django.core.cache import cache
-from .exceptions import ClientError
 from rest_framework.authtoken.models import Token
 
 def catch_client_error(func):
