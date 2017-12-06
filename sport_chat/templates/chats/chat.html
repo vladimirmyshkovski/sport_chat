@@ -173,7 +173,7 @@
                     accessToken = response['authResponse'].accessToken
                     userID = response['authResponse'].userID
                     $.ajax({
-                        url: "http://127.0.0.1:8000/rest-auth/facebook/",
+                        url: "https://sportchating.com/chat/rest-auth/facebook/",
                         method: "post",
                         data: {
                             "access_token": accessToken,
@@ -191,7 +191,7 @@
 
             if (chatUserUsername === '') {
                 $.ajax({
-                    url: "http://127.0.0.1:8000/api/v1/token/" + chatUserToken + "",
+                    url: "https://sportchating.com/chat/api/v1/token/" + chatUserToken + "",
                     method: "get",
                 }).done(function(data) {
                     console.log(data.user)
@@ -237,7 +237,7 @@
                     accessToken = response['authResponse'].accessToken
                     userID = response['authResponse'].userID
                     $.ajax({
-                        url: "http://127.0.0.1:8000/rest-auth/facebook/",
+                        url: "https://sportchating.com/chat/rest-auth/facebook/",
                         method: "post",
                         data: {
                             "access_token": accessToken,
@@ -294,7 +294,7 @@
     } else {
 
         $.ajax({
-            url: "http://127.0.0.1:8000/api/v1/events/",
+            url: "https://sportchating.com/chat/api/v1/events/",
             //context: document.body
         }).done(function(data) {
             for (event in data['results']){
