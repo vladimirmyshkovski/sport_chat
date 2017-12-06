@@ -300,6 +300,7 @@
             url: "https://sportchating.com/api/v1/events/",
             //context: document.body
         }).done(function(data) {
+            console.log(data);
             for (event in data['results']){
                 event = data['results'][event];
                 if (event.in_room == true) {
@@ -326,6 +327,7 @@
                     '</div>' +
                     '</div>');
                 } else {
+                    console.log(event['data']);
                     room_data = event['data'][username];
                     $('#chat-container').append('<div class="chat-container"><div id="chat-container-' + event.id + '"  data-team_id="' + room_data['team_id'] + '" data-team_name="' + room_data['team_name'] + '" data-team_align="' + room_data['team_align'] + '"  class="message d-flex flex-column mb-3"></div></div>');
                     addToChatsHandler(event);
