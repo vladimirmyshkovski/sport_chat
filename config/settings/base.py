@@ -327,7 +327,8 @@ REST_FRAMEWORK = {
 }
 
 CORS_ORIGIN_WHITELIST = (
-    'http://localhost:8000/chat/'
+    'http://localhost:8000/chat/',
+    'https://sportchating.com/chat/'
 )
 
 CHANNELS_API = {
