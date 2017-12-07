@@ -314,9 +314,9 @@ THUMBNAIL_PROCESSORS = (
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.BasicAuthentication',
+        #'rest_framework.authentication.BasicAuthentication',
         #'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        #'rest_framework.authentication.SessionAuthentication',
         #'sport_chat.chats.authentication.CustomTokenAuthentication',
     ),
     #'DEFAULT_PERMISSION_CLASSES': (
@@ -335,5 +335,4 @@ CORS_ORIGIN_WHITELIST = (
 CHANNELS_API = {
   'DEFAULT_PAGE_SIZE': 25,
   'DEFAULT_PERMISSION_CLASSES': ('channels_api.permissions.AllowAny',)
-
 }
