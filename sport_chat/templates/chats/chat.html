@@ -328,7 +328,8 @@
                     '</div>');
                 } else {
                     console.log(event['data']);
-                    room_data = event['data'][username];
+                    // room_data = event['data'][username];
+                    room_data = data['results'][username]
                     $('#chat-container').append('<div class="chat-container"><div id="chat-container-' + event.id + '"  data-team_id="' + room_data['team_id'] + '" data-team_name="' + room_data['team_name'] + '" data-team_align="' + room_data['team_align'] + '"  class="message d-flex flex-column mb-3"></div></div>');
                     addToChatsHandler(event);
                     messageInsert(event);
